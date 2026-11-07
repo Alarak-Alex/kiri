@@ -3419,6 +3419,9 @@ function show(view) {
   if (view === "share") { send("shares"); send("shareusage"); shPoll(); }
   if (view === "settings") { if (!fontLists.families.length) send("fonts"); send("about"); send("logins"); send("resources"); send("proxy"); if (!ui.imp.sources) send("importsources"); if (prefs.tab === "diagnostics") diagOpen(); }
   render();
+  // From the top, as a container's or pod's page opens: leaving a page scrolled
+  // down (a long Terminal or Logs tab) otherwise opened the next view below its rows.
+  $("content").scrollTop = 0;
 }
 
 const empty = {
