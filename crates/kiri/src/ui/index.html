@@ -2195,9 +2195,9 @@ setInterval(() => {
     const c = ui.containers.find((x) => x.Id === el.dataset.live);
     const text = c && statusText(c);
     // Run's "Up 9 s" grows as it counts (10 s, 1 min): the Actions column grows with it.
-    if (text && el.textContent !== text) { if (el.textContent.length !== text.length && el.matches(".run-up")) refit = true; el.textContent = text; }
+    if (text && el.textContent !== text) { if (el.textContent.length !== text.length && el.matches(".run-up")) refit = true; el.textContent = tr(text); }
     const title = c && statusTitle(c);
-    if (title && el.title !== title) el.title = title;
+    if (title && el.title !== title) el.title = tr(title);
   }
   if (refit) fitColumns();
 }, 1000);
@@ -2279,7 +2279,70 @@ const alertIco = (kind) => `<svg class="ico ${kind}" viewBox="0 0 256 256" aria-
 const copyBtn = (value, what) => `<button class="copy" data-copy="${esc(value)}" title="Copy ${what}" aria-label="Copy ${what}"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="${PH.copy}"/></svg></button>`;
 
 /* Settings: the fonts and text size, applied to the whole window. */
-const prefs = { font: "System", mono: "System Mono", scale: 1, tab: "appearance", theme: "dark", accent: "blue" };
+const prefs = { font: "System", mono: "System Mono", scale: 1, tab: "appearance", theme: "dark", accent: "blue", language: "en" };
+const LANGUAGES = [["en", "English"], ["zh-CN", "Simplified Chinese"]];
+const ZH = Object.freeze(Object.fromEntries([
+  ["Docker", "Docker"], ["Containers", "容器"], ["Images", "镜像"], ["Volumes", "卷"], ["Networks", "网络"], ["Builds", "构建"],
+  ["Kubernetes", "Kubernetes"], ["Pods", "Pod"], ["Services", "服务"], ["Share", "共享"], ["Settings", "设置"], ["Linux VM", "Linux 虚拟机"],
+  ["Running", "运行中"], ["Stopped", "已停止"], ["Start", "启动"], ["Stop", "停止"], ["Start Kiri", "启动 Kiri"], ["Start engine", "启动引擎"],
+  ["Turn off engine", "关闭引擎"], ["Off", "关闭"], ["On", "开启"], ["Starting…", "启动中…"], ["Stopping…", "停止中…"], ["Ready", "就绪"],
+  ["System Mono", "系统等宽"], ["System", "系统"], ["English", "English"], ["Simplified Chinese", "简体中文"], ["Language", "语言"], ["Search Kiri…", "搜索 Kiri…"],
+  ["Search containers, images…", "搜索容器、镜像…"], ["Show", "显示"], ["Status", "状态"], ["Memory", "内存"], ["CPUs", "CPU"], ["Shares", "共享"],
+  ["Appearance", "外观"], ["Resources", "资源"], ["Network", "网络"], ["Build with", "构建方式"], ["Registries", "镜像仓库"], ["Import", "导入"],
+  ["Domains", "域名"], ["Diagnostics", "诊断"], ["About", "关于"], ["Theme", "主题"], ["Light", "浅色"], ["Dark", "深色"], ["In use", "使用中"],
+  ["Accent", "强调色"], ["Interface font", "界面字体"], ["Monospace font", "等宽字体"], ["Text size", "文字大小"], ["Log text", "日志文字"],
+  ["Small", "小"], ["Medium", "中"], ["Large", "大"], ["Local names", "本地域名"], ["HTTPS", "HTTPS"], ["Proxy", "代理"], ["Custom", "自定义"],
+  ["None", "无"], ["Pass to containers", "传递给容器"], ["Save", "保存"], ["Cancel", "取消"], ["Close", "关闭"], ["Continue", "继续"], ["Apply…", "应用…"],
+  ["Open in Terminal", "在终端中打开"], ["Open", "打开"], ["Show in Finder", "在 Finder 中显示"], ["Save to Downloads", "保存到下载"], ["Copy", "复制"], ["Copied", "已复制"],
+  ["Overview", "概览"], ["Logs", "日志"], ["Terminal", "终端"], ["Files", "文件"], ["Layers", "层"], ["Security", "安全"], ["Info", "信息"],
+  ["All levels", "所有级别"], ["Error", "错误"], ["Warn", "警告"], ["Debug", "调试"], ["Follow", "跟随"], ["Clear", "清除"], ["Find in logs", "在日志中查找"],
+  ["Name", "名称"], ["Size", "大小"], ["Modified", "修改时间"], ["Image", "镜像"], ["Command", "命令"], ["Created", "创建时间"], ["Started", "启动时间"],
+  ["Finished", "结束时间"], ["Exit code", "退出码"], ["Ports", "端口"], ["Restart", "重启"], ["Protocol", "协议"], ["Container", "容器"], ["Add port", "添加端口"],
+  ["Remove", "移除"], ["Delete", "删除"], ["Undo", "撤销"], ["Select all", "全选"], ["Select none", "取消全选"], ["Imported", "已导入"], ["Importing…", "导入中…"],
+  ["Failed", "失败"], ["In Kiri", "已在 Kiri 中"], ["anonymous", "匿名"], ["All steps", "所有步骤"], ["Ran", "已运行"], ["Cached", "已缓存"], ["Collapse all", "全部折叠"], ["Expand all", "全部展开"],
+  ["No containers yet", "还没有容器"], ["No images yet", "还没有镜像"], ["No volumes yet", "还没有卷"], ["No networks yet", "还没有网络"], ["No builds yet", "还没有构建记录"], ["Nothing here.", "这里还没有内容。"],
+  ["Kiri is not running", "Kiri 未运行"], ["Loading…", "加载中…"], ["This folder is empty.", "此文件夹为空。"], ["Nothing matches", "没有匹配项"], ["Not running", "未运行"], ["Asleep", "休眠"],
+  ["A small, fast container runtime.", "小巧、快速的容器运行时。"], ["Kiri is set up.", "Kiri 已设置完成。"], ["Set up Kiri", "设置 Kiri"], ["A few things need fixing before Kiri can run containers.", "Kiri 运行容器前还需要修复一些设置。"], ["One more step", "还差一步"], ["A couple more steps", "还差几步"],
+  ["How should you reach your containers?", "你希望如何访问容器？"], ["By port. Nothing to set up.", "通过端口访问，无需设置。"], ["By name, no ports.", "通过名称访问，无需记住端口。"], ["You can change this later in Settings → Domains.", "稍后可以在“设置 → 域名”中修改。"],
+  ["Bring images, volumes and containers over to Kiri.", "将镜像、卷和容器迁移到 Kiri。"], ["Nothing to import", "没有可导入内容"], ["Review", "查看"], ["Everything is in Kiri.", "所有内容都已在 Kiri 中。"], ["Builds", "构建"], ["Build with Docker", "使用 Docker 构建"], ["Build with Kiri", "使用 Kiri 构建"],
+  ["No proxy is in use.", "未使用代理。"], ["Off: containers answer at", "关闭：容器通过以下地址响应"], ["On: running containers answer at", "开启：运行中的容器通过以下地址响应"], ["System settings", "系统设置"],
+  ["The VM is asleep; it starts with these next time.", "虚拟机当前休眠，下次启动时将使用这些设置。"], ["Restart VM to apply", "重启虚拟机以应用"], ["Restarting…", "重启中…"], ["The name comes from the Igbo word ntakịrị, “small”.", "这个名字来自伊博语 ntakịrị，意为“小”。"],
+  ["Website", "网站"], ["Made by", "开发者"], ["Duration", "耗时"], ["Started", "已启动"], ["Steps", "步骤"], ["Warnings", "警告"], ["Docs", "文档"], ["No build matches.", "没有匹配的构建记录。"],
+  ["Search", "搜索"], ["Run", "运行"], ["Starting…", "启动中…"], ["Running…", "运行中…"], ["Waiting…", "等待中…"], ["Retry", "重试"], ["Check now", "立即检查"], ["Update", "更新"], ["Not now", "暂不"],
+  ["just now", "刚刚"], ["yesterday", "昨天"], ["of", "共"], ["is", "是"], ["are", "是"], ["item", "项"], ["items", "项"], ["container", "容器"], ["containers", "容器"], ["image", "镜像"], ["images", "镜像"], ["volume", "卷"], ["volumes", "卷"],
+]));
+const ZH_PATTERNS = [
+  [/^Search (.+)…$/, "搜索$1…"], [/^(\d+) running · (\d+)$/, "$1 个运行中 · 共 $2 个"], [/^(\d+) total$/, "共 $1 个"],
+  [/^Up (.+)$/, "运行 $1"], [/^Exited \((\d+)\) (.+)$/, "已退出（$1）$2"], [/^Failed \((\d+)\)$/, "失败（$1）"],
+  [/^Killed \((\d+)\)$/, "已终止（$1）"], [/^Crashed \((\d+)\)$/, "崩溃（$1）"], [/^(\d+) min ago$/, "$1 分钟前"],
+  [/^(\d+) h ago$/, "$1 小时前"], [/^(\d+) days ago$/, "$1 天前"], [/^(\d+) s$/, "$1 秒"], [/^(\d+) min$/, "$1 分钟"],
+  [/^(\d+) h$/, "$1 小时"], [/^(\d+) d$/, "$1 天"], [/^Import (\d+) items?$/, "导入 $1 项"], [/^Brought (\d+) items? over from (.+)$/, "已从 $2 导入 $1 项"],
+];
+const currentLanguage = () => prefs.language === "zh-CN" ? "zh-CN" : "en";
+const tr = (value) => {
+  const text = String(value);
+  if (currentLanguage() !== "zh-CN") return text;
+  if (ZH[text]) return ZH[text];
+  for (const [pattern, replacement] of ZH_PATTERNS) if (pattern.test(text)) return text.replace(pattern, replacement);
+  let out = text;
+  for (const [en, zh] of Object.entries(ZH).sort((a, b) => b[0].length - a[0].length)) {
+    const escaped = en.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    out = out.replace(new RegExp(`(?<![A-Za-z])${escaped}(?![A-Za-z])`, "g"), zh);
+  }
+  return out;
+};
+function translateDom() {
+  document.documentElement.lang = currentLanguage();
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const parent = node.parentElement;
+    if (parent?.closest("script,style,pre,code,.mono") || !node.nodeValue.trim()) continue;
+    node.nodeValue = tr(node.nodeValue);
+  }
+  for (const el of document.querySelectorAll("[title],[aria-label],[placeholder]")) {
+    for (const attr of ["title", "aria-label", "placeholder"]) if (el.hasAttribute(attr)) el.setAttribute(attr, tr(el.getAttribute(attr)));
+  }
+}
 /* Accents; Kiri's own blue first. */
 const ACCENTS = [["blue", "Blue", "#0D6EFD"], ["purple", "Purple", "#8C6EF5"], ["orange", "Orange", "#F58228"], ["teal", "Teal", "#14B4A5"], ["pink", "Pink", "#EC408C"], ["green", "Green", "#28AA5A"]];
 const darkNow = () => prefs.theme === "dark" || (prefs.theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
@@ -3327,6 +3390,8 @@ function renderSettings() {
     <div class="pref"><span class="t">Theme</span><span class="d">Follow ${OS}, or always use the dark or light theme.</span>
       <div class="seg" role="group" aria-label="Theme">${[["system", "System"], ["dark", "Dark"], ["light", "Light"]].map(([v, l]) => `<button data-theme-pick="${v}" aria-pressed="${prefs.theme === v}">${l}</button>`).join("")}</div></div>
     <div class="themes">${[[false, "Light"], [true, "Dark"]].map(([dark, l]) => `<button class="tcard" data-theme-pick="${dark ? "dark" : "light"}" aria-pressed="${inUse === dark}">${mini(dark)}<span>${l}${inUse === dark ? ' <em>In use</em>' : ""}</span></button>`).join("")}</div>
+    <div class="pref"><span class="t">Language</span><span class="d">Choose the language used by Kiri's window.</span>
+      <select id="pref-language" data-language aria-label="Language">${LANGUAGES.map(([v, l]) => `<option value="${v}"${prefs.language === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>
     <div class="pref"><span class="t">Accent</span><span class="d">Selection, focus rings and primary buttons.</span>
       <div class="swatches" role="radiogroup" aria-label="Accent">${ACCENTS.map(([id, l, hex]) => `<button role="radio" aria-checked="${prefs.accent === id}" aria-label="${l}" title="${l}" data-accent="${id}" style="--sw:${hex}"></button>`).join("")}</div></div>
     <div class="pref"><span class="t">Interface font</span><span class="d">Tables, the sidebar and headings.</span>
@@ -4437,6 +4502,7 @@ document.addEventListener("click", (ev) => {
 document.addEventListener("change", (ev) => {
   if (ev.target.matches("[data-blsteps]")) { ui.bl.steps = ev.target.value; renderBuilds(); }
   else if (ev.target.matches("[data-blinternal]")) { ui.bl.internal = ev.target.checked; renderBuilds(); }
+  else if (ev.target.matches("[data-language]")) setPref("language", ev.target.value);
 });
 // Back to the window (it doesn't tick while hidden): ask at once rather than at the next 15 s.
 document.addEventListener("visibilitychange", () => { if (!document.hidden && ui.view === "builds" && ui.vm !== "stopped") send("builds"); });
@@ -4703,7 +4769,7 @@ document.addEventListener("pointercancel", pressDone, true);
 window.addEventListener("blur", pressDone);
 const held = (fn) => (press.down ? (press.later.add(fn), true) : false);
 
-function render() {
+function renderPage() {
   if (held(render)) return;
   themeBtn();
   renderStatus();
@@ -4746,6 +4812,7 @@ function render() {
   if (K8S_VIEWS.has(v)) return renderK8s();
   ({ containers: renderContainers, images: renderImages, volumes: renderVolumes, networks: renderNetworks, builds: renderBuilds })[v]();
 }
+function render() { renderPage(); translateDom(); }
 
 function setVm(state, error) {
   if (ui.vm !== state) {
